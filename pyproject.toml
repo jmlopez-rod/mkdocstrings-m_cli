@@ -19,7 +19,7 @@ mkdocstrings-python = "^1.7.3"
 
 [[tool.poetry.packages]]
 from = "python"
-include = "mkdokcstrings_handlers"
+include = "mkdocstrings_handlers"
 
 [tool.poetry.group.build.dependencies]
 wemake-python-styleguide = "^0.17.0"
