@@ -36,11 +36,13 @@ jobs:
 
       - name: Checks
         run: |-
+          . "$VIRTUAL_ENV/bin/activate"
           ./ci-checks/ci-checks.sh
 
       - name: Build
         id: build
         run: |
+          . "$VIRTUAL_ENV/bin/activate"
           ./m/scripts/build.sh
 
       - name: Save build
@@ -79,5 +81,6 @@ jobs:
 
       - name: Release
         run: |
+          . "$VIRTUAL_ENV/bin/activate"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           ./m/scripts/publish.sh
