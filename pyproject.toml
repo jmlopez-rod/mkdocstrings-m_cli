@@ -6,7 +6,7 @@ requires = ["poetry-core>=1.5.1"]
 
 [tool.poetry]
 name = "mkdocstrings-m_cli"
-version = "0.1.0"
+version = "0.0.0-dev0"
 description = "A Python handler for mkdocstrings."
 authors = ["Manuel Lopez <jmlopez.rod@gmail.com>"]
 license = "MIT"

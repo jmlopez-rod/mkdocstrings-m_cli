@@ -1,0 +1,83 @@
+name: mkdocstrings-m_cli
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  VIRTUAL_ENV: /opt/venv/mkdocstrings-m_cli
+  PYTHONPATH: ./python
+  FORCE_COLOR: 1
+  MYPY_FORCE_COLOR: 1
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/jmlopez-rod/devcontainer-python:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      m-is-release: ${{ steps.build.outputs.m-is-release }}
+      m-tag: ${{ steps.build.outputs.m-tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install
+        run: |-
+          python3 -m venv ${{ env.VIRTUAL_ENV }}
+          poetry install --with build
+          pnpm install
+
+      - name: Checks
+        run: |-
+          ./ci-checks/ci-checks.sh
+
+      - name: Build
+        id: build
+        run: |
+          ./m/scripts/build.sh
+
+      - name: Save build
+        uses: actions/cache/save@v3
+        with:
+          path: ./.stage-pypi
+          key: build-${{ github.sha }}
+
+  release:
+    needs: [build]
+    if: ${{ needs.build.outputs.m-is-release == 'False' }} # testing
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/jmlopez-rod/devcontainer-python:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        M_TAG: ${{ needs.build.outputs.m-tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install
+        run: |-
+          python3 -m venv ${{ env.VIRTUAL_ENV }}
+          poetry install --with build
+
+      - name: Restore build
+        uses: actions/cache/restore@v3
+        with:
+          path: ./.stage-pypi
+          key: build-${{ github.sha }}
+
+      - name: Release
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          ./m/scripts/publish.sh

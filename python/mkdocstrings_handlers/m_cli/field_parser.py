@@ -63,7 +63,7 @@ def _parse_info_bool(name: str, field: FieldInfo) -> ArgParseInfo:
         Function arguments for the parser `add_argument` method.
     """
     default = field.default
-    extras = cast(dict, field.json_schema_extra or {})
+    extras = cast(AnyMap, field.json_schema_extra or {})
     aliases = cast(list[str], extras.get('aliases', None))
     if default:
         names = [argument_name(f'no-{name}')]
@@ -83,7 +83,7 @@ def _parse_info_bool(name: str, field: FieldInfo) -> ArgParseInfo:
 
 
 def _parse_info_standard(name: str, field: FieldInfo) -> ArgParseInfo:
-    extras = cast(dict, field.json_schema_extra or {})
+    extras = cast(AnyMap, field.json_schema_extra or {})
     default = field.default
     required = extras.get('required', False)
     aliases = cast(list[str], extras.get('aliases', None))
@@ -107,7 +107,7 @@ def _parse_info_standard(name: str, field: FieldInfo) -> ArgParseInfo:
 
 
 def _parse_info_proxy(field: FieldInfo) -> ArgParseInfo:
-    extras = cast(dict, field.json_schema_extra or {})
+    extras = cast(AnyMap, field.json_schema_extra or {})
     proxy = cast(FuncArgs, extras['proxy'])
     default = proxy.kwargs.get('default', None)
     validator = proxy.kwargs.get('type')

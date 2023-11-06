@@ -1,0 +1,8 @@
+{
+  "name": "non-publishable-package",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "prettier": "3.0.3"
+  }
+}
