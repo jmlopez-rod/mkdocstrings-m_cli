@@ -53,7 +53,7 @@ jobs:
 
   release:
     needs: [build]
-    if: ${{ needs.build.outputs.m-is-release == 'False' }} # testing
+    if: ${{ needs.build.outputs.m-is-release == 'True' }}
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/jmlopez-rod/devcontainer-python:latest
