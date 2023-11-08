@@ -10,6 +10,7 @@
   ],
   "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && /opt/m_helpers/m_init.sh",
   "containerEnv": {
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
     "CONTAINER_WORKSPACE": "${containerWorkspaceFolder}"
   },
   "mounts": [
