@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 from griffe.dataclasses import Class as GriffeClass
 from griffe.dataclasses import Module as GriffeModule
@@ -7,7 +7,7 @@ from mkdocstrings.handlers.base import CollectorItem
 from mkdocstrings_handlers.python.handler import PythonHandler
 from pydantic import BaseModel
 
-from .class_attr import attach_attributes
+from .class_attr import attach_attributes, get_class_identifier
 from .field_parser import ArgParseInfo, CliArgs, parse_field
 from .render_arg import render_cli_arguments
 
@@ -47,9 +47,14 @@ class MCLIHandler(PythonHandler):
         griffe_obj = PythonHandler.collect(self, identifier, config)
         if isinstance(griffe_obj, GriffeModule):
             for member_name, member in griffe_obj.members.items():
-                if isinstance(member, GriffeClass):
-                    class_identifier = f'{identifier}.{member_name}'
-                    self._process_class(member, class_identifier, config)
+                class_identifier = get_class_identifier(
+                    identifier,
+                    member,
+                    member_name,
+                )
+                if class_identifier:
+                    griffe_class = cast(GriffeClass, member)
+                    self._process_class(griffe_class, class_identifier, config)
         if isinstance(griffe_obj, GriffeClass):
             self._process_class(griffe_obj, identifier, config)
         return griffe_obj

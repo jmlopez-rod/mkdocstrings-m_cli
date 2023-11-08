@@ -1,8 +1,10 @@
+from contextlib import suppress
 from importlib import import_module
+from inspect import cleandoc
 from typing import Any, Mapping, cast
 
-from griffe.dataclasses import Class as GriffeClass
-from griffe.dataclasses import Docstring
+from griffe.dataclasses import Alias, Class, Docstring, Object
+from griffe.exceptions import AliasResolutionError
 from pydantic import BaseModel
 
 
@@ -27,12 +29,40 @@ def import_attr(attr_path: str) -> Any:
     return module_dict[item_name]
 
 
+def get_class_identifier(
+    mod_identifier: str,
+    member: Object | Alias,
+    member_name: str,
+) -> str:
+    """Obtain the class identifier of a Griffe object.
+
+    Args:
+        mod_identifier: The identifier of the module.
+        member: The member object or alias.
+        member_name: The name of the member.
+
+    Returns:
+        The class identifier if the member is a class or an alias of a class,
+             otherwise returns an empty string.
+    """
+    if isinstance(member, Class):
+        return f'{mod_identifier}.{member_name}'
+    is_class = False
+    with suppress(AliasResolutionError):
+        is_class = member.is_class
+    if isinstance(member, Alias) and is_class:
+        return member.target_path
+    return ''
+
+
 def _fmt_attr(name: str, desc: str) -> str:
-    return f'{name}: {desc}'
+    desc_lines = cleandoc(desc).split('\n')
+    new_desc = '\n        '.join(desc_lines)
+    return f'{name}: {new_desc}'
 
 
 def attach_attributes(
-    griffe_class: GriffeClass,
+    griffe_class: Class,
     identifier: str,
     config: Mapping[str, Any],
 ) -> BaseModel:
@@ -52,7 +82,9 @@ def attach_attributes(
     arg_model = cast(BaseModel, import_attr(identifier))
     is_command = config.get('is_command', False)
     has_fields = hasattr(arg_model, 'model_fields')  # noqa: WPS421
-    if not is_command and has_fields and docstr:
+    if docstr and '\n\nAttributes:\n' in docstr.value:
+        return arg_model
+    if not is_command and has_fields and docstr and arg_model.model_fields:
         att_str = '\n    '.join([
             _fmt_attr(field, field_info.description or '...')
             for field, field_info in arg_model.model_fields.items()
